@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -91,5 +92,29 @@ func (t *Tracker) Announce(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Failed to respond to announce: %v", err)
+	}
+}
+
+func (t *Tracker) ListServers(w http.ResponseWriter, r *http.Request) {
+	type response struct {
+		Servers []string `json:"servers"`
+	}
+
+	t.RLock()
+	defer t.RUnlock()
+
+	servers := make([]string, 0, len(t.RpcServers))
+	for server := range t.RpcServers {
+		servers = append(servers, server)
+	}
+
+	slices.Sort(servers)
+
+	err := json.NewEncoder(w).Encode(response{
+		Servers: servers,
+	})
+
+	if err != nil {
+		log.Printf("Failed to respond to list servers: %v", err)
 	}
 }

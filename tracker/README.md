@@ -17,3 +17,18 @@ Requests should contain the following query parameters:
 The response will be a JSON object with the following fields:
 
 - `interval`: The number of seconds the client should wait between announces.
+
+### List Servers
+
+A list of the servers that have announced themselves to the tracker can be retreived from `/servers`.
+
+The response will be a JSON object with the following fields:
+
+- `servers`: A list of the servers that have announced themselves to the tracker. Each server is represented as a string of the form "ip:port".
+
+Example Response:
+```json
+{
+    "servers": ["192.168.1.123:6767", "192.168.1.42:6767"]
+}
+```
