@@ -34,6 +34,7 @@ func NewTracker() *Tracker {
 
 func (t *Tracker) AddRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/announce", t.Announce)
+	mux.HandleFunc("/servers", t.ListServers)
 }
 
 func (t *Tracker) Announce(w http.ResponseWriter, r *http.Request) {
