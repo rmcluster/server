@@ -1,4 +1,4 @@
-package ramalama
+package llama
 
 import (
 	"encoding/json"
@@ -29,7 +29,7 @@ type ModelMetadata struct {
 	GeneralSizeLabel    *string `json:"general.size_label"`
 }
 
-func (r Ramalama) Inspect(name string) (InspectInfo, error) {
+func (r Llama) Inspect(name string) (InspectInfo, error) {
 	if err := r.checkValidity(); err != nil {
 		return InspectInfo{}, err
 	}

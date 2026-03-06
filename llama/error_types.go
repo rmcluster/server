@@ -1,4 +1,4 @@
-package ramalama
+package llama
 
 type ErrEmptyCommand struct{}
 

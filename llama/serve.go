@@ -1,4 +1,4 @@
-package ramalama
+package llama
 
 import (
 	"context"
@@ -19,7 +19,7 @@ type RpcNode struct {
 	Host string
 }
 
-func (c Ramalama) ServeCommand(ctx context.Context, args ServeArgs) *exec.Cmd {
+func (c Llama) ServeCommand(ctx context.Context, args ServeArgs) *exec.Cmd {
 	cliArgs := slices.Concat(c.Command[1:], []string{})
 
 	nodes := ""

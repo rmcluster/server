@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/wk-y/rama-swap/ramalama"
+	"github.com/wk-y/rama-swap/llama"
 )
 
-func convertModelList(ramaModels []ramalama.Model) ([]Model, error) {
+func convertModelList(ramaModels []llama.Model) ([]Model, error) {
 	var models []Model
 	for _, ramaModel := range ramaModels {
 		t, err := time.Parse(time.RFC3339, ramaModel.Modified)

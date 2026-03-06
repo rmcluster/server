@@ -10,7 +10,7 @@ import (
 	"sync"
 
 	"github.com/wk-y/rama-swap/internal/util"
-	"github.com/wk-y/rama-swap/ramalama"
+	"github.com/wk-y/rama-swap/llama"
 	"github.com/wk-y/rama-swap/server/scheduler"
 )
 
@@ -18,14 +18,14 @@ type Server struct {
 	ModelNameMangler func(string) string
 	BasePort         int // starting port number to use for underlying instances
 
-	ramalama  ramalama.Ramalama
+	ramalama  llama.Llama
 	scheduler scheduler.ModelScheduler
 
 	demangleCacheLock sync.RWMutex
 	demangleCache     map[string]string
 }
 
-func NewServer(r ramalama.Ramalama, scheduler scheduler.ModelScheduler) *Server {
+func NewServer(r llama.Llama, scheduler scheduler.ModelScheduler) *Server {
 	return &Server{
 		ramalama:      r,
 		scheduler:     scheduler,

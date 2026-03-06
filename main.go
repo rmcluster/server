@@ -11,7 +11,7 @@ import (
 
 	"github.com/coreos/go-systemd/v22/activation"
 
-	"github.com/wk-y/rama-swap/ramalama"
+	"github.com/wk-y/rama-swap/llama"
 	"github.com/wk-y/rama-swap/server"
 	"github.com/wk-y/rama-swap/server/scheduler"
 	"github.com/wk-y/rama-swap/tracker"
@@ -63,7 +63,7 @@ func main() {
 		}
 	}
 
-	ramalama := ramalama.Ramalama{
+	ramalama := llama.Llama{
 		Command: args.Ramalama,
 	}
 	scheduler := scheduler.NewFcfsScheduler(ramalama, 49170, *args.IdleTimeout)

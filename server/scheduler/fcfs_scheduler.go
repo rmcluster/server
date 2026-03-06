@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wk-y/rama-swap/ramalama"
+	"github.com/wk-y/rama-swap/llama"
 )
 
 // fcfsScheduler is a ModelScheduler that implements (roughly) first-come-first-serve
@@ -20,7 +20,7 @@ type fcfsScheduler struct {
 	idleTimeout time.Duration
 
 	lock     sync.Mutex
-	ramalama ramalama.Ramalama
+	ramalama llama.Llama
 
 	// rules for using the backend properties:
 	// backendCond must be held while changing any of the backend properties
@@ -140,10 +140,10 @@ func (f *fcfsScheduler) startBackend(modelName string) (*backend, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	back.cancel = cancel
 
-	cmd := f.ramalama.ServeCommand(ctx, ramalama.ServeArgs{
+	cmd := f.ramalama.ServeCommand(ctx, llama.ServeArgs{
 		Model: modelName,
 		Port:  back.port,
-		RpcNodes: []ramalama.RpcNode{
+		RpcNodes: []llama.RpcNode{
 			{
 				Host: "192.168.0.198:50052", // FIXME
 			},
@@ -232,7 +232,7 @@ func (f *fcfsScheduler) startIdleTimeout() {
 	}
 }
 
-func NewFcfsScheduler(ramalama ramalama.Ramalama, port int, idleTimeout time.Duration) *fcfsScheduler {
+func NewFcfsScheduler(ramalama llama.Llama, port int, idleTimeout time.Duration) *fcfsScheduler {
 	scheduler := &fcfsScheduler{
 		ramalama:            ramalama,
 		port:                port,

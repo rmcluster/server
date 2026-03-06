@@ -1,12 +1,12 @@
-package ramalama
+package llama
 
-type Ramalama struct {
+type Llama struct {
 	Command []string
 }
 
 // checkValidity checks that the Ramalama configuration is valid.
 // A valid config must have a non-empty Command slice.
-func (r Ramalama) checkValidity() error {
+func (r Llama) checkValidity() error {
 	if len(r.Command) == 0 {
 		return ErrEmptyCommand{}
 	}
@@ -19,7 +19,7 @@ type Model struct {
 	Size     int
 }
 
-func (c Ramalama) GetModels() ([]Model, error) {
+func (c Llama) GetModels() ([]Model, error) {
 	return []Model{
 		{
 			Name: "hf:unsloth/Qwen3-0.6B-GGUF:UD-Q4_K_XL",
