@@ -53,10 +53,10 @@ func main() {
 	}
 
 	if args.Ramalama == nil {
-		if env := os.Getenv("RAMALAMA_COMMAND"); env != "" {
+		if env := os.Getenv("LLAMA_COMMAND"); env != "" {
 			args.Ramalama = strings.Split(env, " ")
 			if len(args.Ramalama) == 0 {
-				log.Fatalln("RAMALAMA_COMMAND environment variable should not be all whitespace")
+				log.Fatalln("LLAMA_COMMAND environment variable should not be all whitespace")
 			}
 		} else {
 			args.Ramalama = []string{"llama-server"}
