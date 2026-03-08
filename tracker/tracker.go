@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"slices"
+	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -22,8 +23,14 @@ type Tracker struct {
 }
 
 type clientInfo struct {
-	lastSeen    time.Time
+	RpcServerInfo
 	expiryTimer *time.Timer
+}
+
+type RpcServerInfo struct {
+	Ip       string    `json:"ip"`
+	Port     int       `json:"port"`
+	LastSeen time.Time `json:"last_seen"`
 }
 
 func NewTracker() *Tracker {
@@ -51,13 +58,19 @@ func (t *Tracker) Announce(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	portNum, err := strconv.Atoi(port)
+	if err != nil {
+		http.Error(w, "invalid port", http.StatusBadRequest)
+		return
+	}
+
 	ip := r.URL.Query().Get("ip")
 	if ip == "" {
 		// fill with the ip from r.RemoteAddr
 		ip = strings.SplitN(r.RemoteAddr, ":", 2)[0]
 	}
 
-	// todo validate that the IP and port are valid
+	// todo: validate ip
 
 	clientId := ip + ":" + port
 
@@ -72,7 +85,11 @@ func (t *Tracker) Announce(w http.ResponseWriter, r *http.Request) {
 	announceTime := time.Now()
 
 	t.RpcServers[clientId] = clientInfo{
-		lastSeen: announceTime,
+		RpcServerInfo: RpcServerInfo{
+			LastSeen: announceTime,
+			Ip:       ip,
+			Port:     portNum,
+		},
 		expiryTimer: time.AfterFunc(expiryDuration, func() {
 			t.Lock()
 			defer t.Unlock()
@@ -80,7 +97,7 @@ func (t *Tracker) Announce(w http.ResponseWriter, r *http.Request) {
 			// there's a possible race condition if the client announces just as the timer expires,
 			// preventing the timer from being stopped. To prevent that, we verify that the last seen time
 			// has not been changed.
-			if t.RpcServers[clientId].lastSeen.Equal(announceTime) {
+			if t.RpcServers[clientId].LastSeen.Equal(announceTime) {
 				delete(t.RpcServers, clientId)
 				log.Printf("Removed %s from tracker", clientId)
 			}
@@ -88,7 +105,8 @@ func (t *Tracker) Announce(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// respond
-	err := json.NewEncoder(w).Encode(response{
+	w.Header().Add("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(response{
 		Interval: int(interval.Seconds()),
 	})
 
@@ -99,10 +117,12 @@ func (t *Tracker) Announce(w http.ResponseWriter, r *http.Request) {
 
 func (t *Tracker) ListServers(w http.ResponseWriter, r *http.Request) {
 	type response struct {
-		Servers []string `json:"servers"`
+		Servers []RpcServerInfo `json:"servers"`
 	}
 
 	servers := t.GetServers()
+
+	w.Header().Add("Content-Type", "application/json")
 
 	err := json.NewEncoder(w).Encode(response{
 		Servers: servers,
@@ -113,16 +133,24 @@ func (t *Tracker) ListServers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (t *Tracker) GetServers() []string {
+func (t *Tracker) GetServers() []RpcServerInfo {
 	t.RLock()
 	defer t.RUnlock()
 
-	servers := make([]string, 0, len(t.RpcServers))
-	for server := range t.RpcServers {
-		servers = append(servers, server)
+	servers := make([]RpcServerInfo, 0, len(t.RpcServers))
+	for _, server := range t.RpcServers {
+		servers = append(servers, server.RpcServerInfo)
 	}
 
-	slices.Sort(servers)
+	sort.Slice(servers, func(i, j int) bool {
+		if servers[i].Ip < servers[j].Ip {
+			return true
+		}
+		if servers[i].Ip > servers[j].Ip {
+			return false
+		}
+		return servers[i].Port < servers[j].Port
+	})
 
 	return servers
 }

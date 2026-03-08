@@ -16,20 +16,21 @@ type ServeArgs struct {
 }
 
 type RpcNode struct {
-	Host string
+	Ip   string
+	Port int
 }
 
 func (c Llama) ServeCommand(ctx context.Context, args ServeArgs) *exec.Cmd {
 	cliArgs := slices.Concat(c.Command[1:], []string{})
 
-	nodes := ""
+	var nodes strings.Builder
 	sep := ""
 	for _, node := range args.RpcNodes {
-		nodes += sep + node.Host
+		fmt.Fprintf(&nodes, "%s%s:%d", sep, node.Ip, node.Port)
 		sep = ","
 	}
 
-	cliArgs = append(cliArgs, "-ngl", "99", "--rpc", nodes)
+	cliArgs = append(cliArgs, "-ngl", "99", "--rpc", nodes.String())
 
 	if args.Alias != nil {
 		cliArgs = append(cliArgs, "-n", *args.Alias)

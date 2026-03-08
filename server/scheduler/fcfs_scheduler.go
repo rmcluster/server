@@ -31,7 +31,7 @@ type fcfsScheduler struct {
 	backendCond     sync.Cond
 	backend         *backend
 	backendModel    string
-	backendRpcNodes []string
+	backendRpcNodes []llama.RpcNode
 	backendUsers    int
 	backendIdleAt   time.Time
 	backendLocking  bool
@@ -69,8 +69,13 @@ func (f *fcfsScheduler) Lock(ctx context.Context, model string) (*backend, error
 		return nil, errors.New("no servers")
 	}
 
+	rpcNodes := make([]llama.RpcNode, len(servers))
+	for i, server := range servers {
+		rpcNodes[i] = llama.RpcNode{Ip: server.Ip, Port: server.Port}
+	}
+
 	// GetServers is sorted so direct comparison is valid
-	if f.backend != nil && f.backendModel == model && slices.Equal(f.backendRpcNodes, servers) {
+	if f.backend != nil && f.backendModel == model && slices.Equal(f.backendRpcNodes, rpcNodes) {
 		// if it is exited, don't return the backend
 		select {
 		case <-f.backend.Exited:
@@ -91,12 +96,13 @@ func (f *fcfsScheduler) Lock(ctx context.Context, model string) (*backend, error
 		f.backend = nil
 	}
 
-	backend, err := f.startBackend(model, servers)
+	backend, err := f.startBackend(model, rpcNodes)
 	if err != nil {
 		return nil, err
 	}
 	f.backend = backend
 	f.backendModel = model
+	f.backendRpcNodes = rpcNodes
 
 	select {
 	case <-ctx.Done():
@@ -143,22 +149,17 @@ func (f *fcfsScheduler) modelExists(modelName string) (bool, error) {
 	return ok, nil
 }
 
-func (f *fcfsScheduler) startBackend(modelName string, rpcNodes []string) (*backend, error) {
+func (f *fcfsScheduler) startBackend(modelName string, rpcNodes []llama.RpcNode) (*backend, error) {
 	back := &backend{}
 	back.port = f.port
 
 	ctx, cancel := context.WithCancel(context.Background())
 	back.cancel = cancel
 
-	rpc := make([]llama.RpcNode, len(rpcNodes))
-	for i, node := range rpcNodes {
-		rpc[i] = llama.RpcNode{Host: node}
-	}
-
 	cmd := f.ramalama.ServeCommand(ctx, llama.ServeArgs{
 		Model:    modelName,
 		Port:     back.port,
-		RpcNodes: rpc,
+		RpcNodes: rpcNodes,
 	})
 	cmd.Stderr = os.Stderr
 
