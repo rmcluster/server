@@ -18,10 +18,10 @@ model {
         openai_api = service 'OpenAI API Service' {
             description 'Industry standard API for external use'
             -> llama_sever 'uses'
-            -> scheduler 'uses'
+            -> manager 'uses'
         }
-        scheduler = service 'Scheduler Service' {
-            description 'Schedules inference jobs'
+        manager = service 'Inference Management Service' {
+            description 'Manages inference servers based on usage'
             -> llama_sever 'manages'
             -> tracker 'queries'
         }
