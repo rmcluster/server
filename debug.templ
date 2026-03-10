@@ -12,6 +12,9 @@ templ debugPage(clients []tracker.RpcServerInfo) {
 					<tr>
 						<th>IP</th>
 						<th>Port</th>
+						<th>Max Size</th>
+						<th>Battery</th>
+						<th>Temperature</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -19,6 +22,9 @@ templ debugPage(clients []tracker.RpcServerInfo) {
 						<tr>
 							<td>{ client.Ip }</td>
 							<td>{ client.Port }</td>
+							<td>{ client.MaxSize }</td>
+							<td>{ client.Battery }</td>
+							<td>{ client.Temperature }</td>
 						</tr>
 					}
 				</tbody>
