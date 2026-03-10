@@ -13,10 +13,10 @@ import (
 )
 
 // the number of seconds after which an RPC server is removed from the list
-const expiryDuration = 60 * time.Second
+const expiryDuration = time.Second * 30
 
 // the number of seconds to wait between announces
-const interval = expiryDuration / 2
+const interval = time.Second * 10
 
 type Tracker struct {
 	sync.RWMutex
@@ -92,7 +92,7 @@ func (t *Tracker) Announce(w http.ResponseWriter, r *http.Request) {
 
 	// todo: validate ip
 
-	clientId := ip + ":" + port
+	clientId := ip // + ":" + port
 
 	func() {
 		t.Lock()
