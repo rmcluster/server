@@ -16,9 +16,6 @@ import (
 	"github.com/wk-y/rama-swap/tracker"
 )
 
-const defaultPort = 4917
-const defaultHost = "127.0.0.1"
-
 const EX_USAGE = 64
 
 func main() {

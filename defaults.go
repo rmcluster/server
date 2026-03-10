@@ -7,16 +7,19 @@ import (
 	"time"
 )
 
+const defaultPort = 4917
+const defaultHost = "0.0.0.0"
+
 func setDefaults(args *args) {
 
 	// set default values for unspecified flags
 	if args.Host == nil {
-		host := "127.0.0.1"
+		host := defaultHost
 		args.Host = &host
 	}
 
 	if args.Port == nil {
-		port := 4917
+		port := defaultPort
 		args.Port = &port
 	}
 
