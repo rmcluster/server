@@ -55,9 +55,6 @@ func (t *Tracker) Announce(w http.ResponseWriter, r *http.Request) {
 		Interval int `json:"interval"`
 	}
 
-	t.Lock()
-	defer t.Unlock()
-
 	port := r.URL.Query().Get("port")
 	if port == "" {
 		http.Error(w, "missing port", http.StatusBadRequest)
@@ -97,39 +94,44 @@ func (t *Tracker) Announce(w http.ResponseWriter, r *http.Request) {
 
 	clientId := ip + ":" + port
 
-	// avoid duplicate timers
-	if existingTimer := t.RpcServers[clientId].expiryTimer; existingTimer != nil {
-		existingTimer.Stop()
-		log.Printf("Reannounce from %s", clientId)
-	} else {
-		log.Printf("New announce from %s", clientId)
-	}
+	func() {
+		t.Lock()
+		defer t.Unlock()
 
-	announceTime := time.Now()
+		// avoid duplicate timers
+		if existingTimer := t.RpcServers[clientId].expiryTimer; existingTimer != nil {
+			existingTimer.Stop()
+			log.Printf("Reannounce from %s", clientId)
+		} else {
+			log.Printf("New announce from %s", clientId)
+		}
 
-	t.RpcServers[clientId] = clientInfo{
-		RpcServerInfo: RpcServerInfo{
-			LastSeen:      announceTime,
-			Ip:            ip,
-			Port:          portNum,
-			HardwareModel: hardwareModel,
-			MaxSize:       maxSize,
-			Battery:       battery,
-			Temperature:   temperature,
-		},
-		expiryTimer: time.AfterFunc(expiryDuration, func() {
-			t.Lock()
-			defer t.Unlock()
+		announceTime := time.Now()
 
-			// there's a possible race condition if the client announces just as the timer expires,
-			// preventing the timer from being stopped. To prevent that, we verify that the last seen time
-			// has not been changed.
-			if t.RpcServers[clientId].LastSeen.Equal(announceTime) {
-				delete(t.RpcServers, clientId)
-				log.Printf("Removed %s from tracker", clientId)
-			}
-		}),
-	}
+		t.RpcServers[clientId] = clientInfo{
+			RpcServerInfo: RpcServerInfo{
+				LastSeen:      announceTime,
+				Ip:            ip,
+				Port:          portNum,
+				HardwareModel: hardwareModel,
+				MaxSize:       maxSize,
+				Battery:       battery,
+				Temperature:   temperature,
+			},
+			expiryTimer: time.AfterFunc(expiryDuration, func() {
+				t.Lock()
+				defer t.Unlock()
+
+				// there's a possible race condition if the client announces just as the timer expires,
+				// preventing the timer from being stopped. To prevent that, we verify that the last seen time
+				// has not been changed.
+				if t.RpcServers[clientId].LastSeen.Equal(announceTime) {
+					delete(t.RpcServers, clientId)
+					log.Printf("Removed %s from tracker", clientId)
+				}
+			}),
+		}
+	}()
 
 	// respond
 	w.Header().Add("Content-Type", "application/json")
