@@ -11,6 +11,7 @@ import (
 	"github.com/coreos/go-systemd/v22/activation"
 
 	"github.com/wk-y/rama-swap/llama"
+	"github.com/wk-y/rama-swap/microservices/dashboard"
 	"github.com/wk-y/rama-swap/server"
 	"github.com/wk-y/rama-swap/server/scheduler"
 	"github.com/wk-y/rama-swap/tracker"
@@ -41,7 +42,8 @@ func main() {
 	tracker.AddRoutes(mux)
 	scheduler := scheduler.NewFcfsScheduler(ramalama, 49170, *args.IdleTimeout, tracker)
 	server := server.NewServer(ramalama, scheduler)
-	addDebugRoute(mux, tracker)
+	dashboard := dashboard.NewDashboard(tracker)
+	dashboard.RegisterHandlers(mux)
 
 	server.ModelNameMangler = func(s string) string {
 		return strings.ReplaceAll(s, "/", "_")
