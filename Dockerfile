@@ -7,7 +7,7 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 go build -o rmd-server .
 
-FROM ghcr.io/ggml-org/llama.cpp:server@sha256:6cfa19f64b7a5ac67a783e7566bf57e036e120eb95d0d00670547cf96eb98780
+FROM ghcr.io/ggml-org/llama.cpp:server@sha256:33eb46f546ae1df20a219b9d64d119c723d12582e0d56cc4c26d4d6cd9a426af
 COPY --from=builder /build-dir/rmd-server /usr/local/bin/rmd-server
 
 ENTRYPOINT [ "rmd-server", "-host", "0.0.0.0", "-port", "4917" ]
