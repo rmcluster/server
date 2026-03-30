@@ -7,7 +7,7 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 go build -o rmd-server .
 
-FROM ghcr.io/project-panzerschreck/llama.cpp-rpc:server@sha256:296159e5b568ababefc8b317e9e6edb2f9f20986109fb9f0fa01e6b4e6bd70a9
+FROM ghcr.io/project-panzerschreck/llama.cpp-rpc:server@sha256:2b9e5936face690a6f781dd95f1dcf994733431ffaf96ac981c8022e441df59e
 COPY --from=builder /build-dir/rmd-server /usr/local/bin/rmd-server
 
 # llama.cpp's docker image puts the executables in /app
