@@ -39,11 +39,6 @@ func (s *Server) HandleHttp(mux *http.ServeMux) {
 	mux.HandleFunc("POST /v1/chat/completions", s.handleChatCompletions)
 	mux.HandleFunc("POST /v1/completions", s.handleCompletions)
 
-	// Ollama-compatible endpoints
-	mux.HandleFunc("/api/version", s.ollamaVersion)
-	mux.HandleFunc("/api/tags", s.ollamaTags)
-	mux.HandleFunc("/api/chat", s.ollamaChat)
-
 	// llama-swap style endpoint
 	mux.HandleFunc("/upstream/{model}/{rest...}", s.serveUpstream)
 	mux.HandleFunc("/upstream/{$}", s.serveUpstreamSelect)
