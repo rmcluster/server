@@ -17,6 +17,12 @@ type instanceImpl struct {
 	process *os.Process
 	dead    chan struct{}
 	port    int
+	model   string
+}
+
+// Model implements [Instance].
+func (i *instanceImpl) Model() string {
+	return i.model
 }
 
 // WaitReady implements [Instance].

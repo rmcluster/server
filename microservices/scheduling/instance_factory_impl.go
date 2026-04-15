@@ -87,6 +87,7 @@ func (i *instanceFactoryImpl) StartInstance(model string, nodes []Node) (Instanc
 		process: cmd.Process,
 		port:    port,
 		dead:    dead,
+		model:   model,
 	}, nil
 }
 
