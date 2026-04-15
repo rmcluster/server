@@ -11,7 +11,7 @@ import (
 
 	"github.com/wk-y/rama-swap/internal/util"
 	"github.com/wk-y/rama-swap/llama"
-	"github.com/wk-y/rama-swap/server/scheduler"
+	"github.com/wk-y/rama-swap/microservices/scheduling"
 )
 
 type Server struct {
@@ -19,13 +19,13 @@ type Server struct {
 	BasePort         int // starting port number to use for underlying instances
 
 	ramalama  llama.Llama
-	scheduler scheduler.ModelScheduler
+	scheduler scheduling.Scheduler
 
 	demangleCacheLock sync.RWMutex
 	demangleCache     map[string]string
 }
 
-func NewServer(r llama.Llama, scheduler scheduler.ModelScheduler) *Server {
+func NewServer(r llama.Llama, scheduler scheduling.Scheduler) *Server {
 	return &Server{
 		ramalama:      r,
 		scheduler:     scheduler,
@@ -62,20 +62,17 @@ func (s *Server) proxyEndpoint(w http.ResponseWriter, r *http.Request, modelFind
 		return
 	}
 
-	backend, err := s.scheduler.Lock(r.Context(), model)
-	if err != nil {
-		log.Printf("Failed to start model %s: %v\n", model, err)
-		return
-	}
-	defer s.scheduler.Unlock(backend)
-
 	body := r.Body
 	r.Body = util.ReadCloserWrapper{
 		Reader: io.MultiReader(&decoderRead, body),
 		Closer: body.Close,
 	}
 
-	backend.Proxy().ServeHTTP(w, r)
+	task := newTaskWithCompletion(newProxyTask(model, w, r))
+
+	s.scheduler.OnNewTask(task)
+
+	<-task.done
 }
 
 func (s *Server) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
