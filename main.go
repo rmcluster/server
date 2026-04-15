@@ -13,8 +13,8 @@ import (
 	"github.com/wk-y/rama-swap/llama"
 	"github.com/wk-y/rama-swap/microservices/dashboard"
 	"github.com/wk-y/rama-swap/microservices/homepage"
+	"github.com/wk-y/rama-swap/microservices/scheduling"
 	"github.com/wk-y/rama-swap/server"
-	"github.com/wk-y/rama-swap/server/scheduler"
 	"github.com/wk-y/rama-swap/tracker"
 )
 
@@ -41,7 +41,7 @@ func main() {
 	}
 	tracker := tracker.NewTracker()
 	tracker.AddRoutes(mux)
-	scheduler := scheduler.NewFcfsScheduler(ramalama, 49170, *args.IdleTimeout, tracker)
+	scheduler := scheduling.NewPartitioningScheduler(scheduling.NewInstanceFactory(&ramalama, 49170), 3)
 	server := server.NewServer(ramalama, scheduler)
 	dashboard := dashboard.NewDashboard(tracker)
 	dashboard.RegisterHandlers(mux)

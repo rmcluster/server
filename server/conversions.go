@@ -10,14 +10,18 @@ import (
 func convertModelList(ramaModels []llama.Model) ([]Model, error) {
 	var models []Model
 	for _, ramaModel := range ramaModels {
-		t, err := time.Parse(time.RFC3339, ramaModel.Modified)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse model timestamp %#v: %v", ramaModel.Modified, err)
+		var created int
+		if ramaModel.Modified != "" {
+			t, err := time.Parse(time.RFC3339, ramaModel.Modified)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse model timestamp %#v: %v", ramaModel.Modified, err)
+			}
+			created = int(t.Unix())
 		}
 		models = append(models, Model{
 			Id:      ramaModel.Name,
 			Object:  "model",
-			Created: int(t.Unix()),
+			Created: created,
 			OwnedBy: "rama-swap",
 		})
 	}
