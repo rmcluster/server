@@ -18,8 +18,15 @@ const expiryDuration = time.Second * 30
 // the number of seconds to wait between announces
 const interval = time.Second * 10
 
+type TrackerSubscriber interface {
+	OnNodeAdded(node RpcServerInfo)
+	OnNodeRemoved(node RpcServerInfo)
+}
+
 type Tracker struct {
 	sync.RWMutex
+	subscribers map[TrackerSubscriber]struct{}
+
 	RpcServers map[string]clientInfo
 }
 
@@ -40,7 +47,8 @@ type RpcServerInfo struct {
 
 func NewTracker() *Tracker {
 	return &Tracker{
-		RpcServers: make(map[string]clientInfo),
+		RpcServers:  make(map[string]clientInfo),
+		subscribers: make(map[TrackerSubscriber]struct{}),
 	}
 }
 
@@ -97,27 +105,31 @@ func (t *Tracker) Announce(w http.ResponseWriter, r *http.Request) {
 	func() {
 		t.Lock()
 		defer t.Unlock()
+		notifyNew := false
 
 		// avoid duplicate timers
 		if existingTimer := t.RpcServers[clientId].expiryTimer; existingTimer != nil {
 			existingTimer.Stop()
 			log.Printf("Reannounce from %s", clientId)
 		} else {
+			notifyNew = true
 			log.Printf("New announce from %s", clientId)
 		}
 
 		announceTime := time.Now()
 
+		serverInfo := RpcServerInfo{
+			LastSeen:      announceTime,
+			Ip:            ip,
+			Port:          portNum,
+			HardwareModel: hardwareModel,
+			MaxSize:       maxSize,
+			Battery:       battery,
+			Temperature:   temperature,
+		}
+
 		t.RpcServers[clientId] = clientInfo{
-			RpcServerInfo: RpcServerInfo{
-				LastSeen:      announceTime,
-				Ip:            ip,
-				Port:          portNum,
-				HardwareModel: hardwareModel,
-				MaxSize:       maxSize,
-				Battery:       battery,
-				Temperature:   temperature,
-			},
+			RpcServerInfo: serverInfo,
 			expiryTimer: time.AfterFunc(expiryDuration, func() {
 				t.Lock()
 				defer t.Unlock()
@@ -127,9 +139,14 @@ func (t *Tracker) Announce(w http.ResponseWriter, r *http.Request) {
 				// has not been changed.
 				if t.RpcServers[clientId].LastSeen.Equal(announceTime) {
 					delete(t.RpcServers, clientId)
+					t.notifyNodeRemoved(t.RpcServers[clientId].RpcServerInfo)
 					log.Printf("Removed %s from tracker", clientId)
 				}
 			}),
+		}
+
+		if notifyNew {
+			t.notifyNodeAdded(serverInfo)
 		}
 	}()
 
@@ -182,4 +199,28 @@ func (t *Tracker) GetServers() []RpcServerInfo {
 	})
 
 	return servers
+}
+
+func (t *Tracker) Subscribe(subscriber TrackerSubscriber) {
+	t.Lock()
+	defer t.Unlock()
+	t.subscribers[subscriber] = struct{}{}
+}
+
+func (t *Tracker) Unsubscribe(subscriber TrackerSubscriber) {
+	t.Lock()
+	defer t.Unlock()
+	delete(t.subscribers, subscriber)
+}
+
+func (t *Tracker) notifyNodeAdded(node RpcServerInfo) {
+	for subscriber := range t.subscribers {
+		subscriber.OnNodeAdded(node)
+	}
+}
+
+func (t *Tracker) notifyNodeRemoved(node RpcServerInfo) {
+	for subscriber := range t.subscribers {
+		subscriber.OnNodeRemoved(node)
+	}
 }

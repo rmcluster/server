@@ -11,8 +11,9 @@ import (
 	"github.com/coreos/go-systemd/v22/activation"
 
 	"github.com/wk-y/rama-swap/llama"
+	"github.com/wk-y/rama-swap/microservices/scheduling"
 	"github.com/wk-y/rama-swap/server"
-	"github.com/wk-y/rama-swap/server/scheduler"
+	schedulersubscriber "github.com/wk-y/rama-swap/server/scheduler_subscriber"
 	"github.com/wk-y/rama-swap/tracker"
 	"github.com/wk-y/rama-swap/uiapi"
 )
@@ -54,7 +55,8 @@ func main() {
 	}
 	tracker := tracker.NewTracker()
 	tracker.AddRoutes(mux)
-	scheduler := scheduler.NewFcfsScheduler(ramalama, 49170, *args.IdleTimeout, tracker)
+	scheduler := scheduling.NewPartitioningScheduler(scheduling.NewInstanceFactory(&ramalama, 49170), 3)
+	tracker.Subscribe(schedulersubscriber.NewSchedulerSubscriber(scheduler))
 	server := server.NewServer(ramalama, scheduler)
 	ui := uiapi.New(tracker, ramalama)
 	ui.RegisterHandlers(mux)

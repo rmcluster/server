@@ -15,18 +15,12 @@ func (s *Server) serveUpstream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	backend, err := s.scheduler.Lock(r.Context(), name)
-	if err != nil {
-		log.Println(err)
-		w.Write([]byte(fmt.Sprint(err)))
-		return
-	}
-	defer s.scheduler.Unlock(backend)
-
-	<-backend.Ready
-
 	r.URL.Path = "/" + r.PathValue("rest")
-	backend.Proxy().ServeHTTP(w, r)
+
+	task := newTaskWithCompletion(newProxyTask(name, w, r))
+	s.scheduler.OnNewTask(task)
+
+	<-task.done
 }
 
 func (s *Server) serveUpstreamSelect(w http.ResponseWriter, r *http.Request) {
