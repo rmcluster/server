@@ -11,14 +11,27 @@ import (
 	"github.com/coreos/go-systemd/v22/activation"
 
 	"github.com/wk-y/rama-swap/llama"
-	"github.com/wk-y/rama-swap/microservices/dashboard"
-	"github.com/wk-y/rama-swap/microservices/homepage"
 	"github.com/wk-y/rama-swap/server"
 	"github.com/wk-y/rama-swap/server/scheduler"
 	"github.com/wk-y/rama-swap/tracker"
+	"github.com/wk-y/rama-swap/uiapi"
 )
 
 const EX_USAGE = 64
+
+// corsMiddleware wraps an http.Handler to add CORS headers for development
+func corsMiddleware(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept")
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		handler.ServeHTTP(w, r)
+	})
+}
 
 func main() {
 	mux := http.NewServeMux()
@@ -43,10 +56,8 @@ func main() {
 	tracker.AddRoutes(mux)
 	scheduler := scheduler.NewFcfsScheduler(ramalama, 49170, *args.IdleTimeout, tracker)
 	server := server.NewServer(ramalama, scheduler)
-	dashboard := dashboard.NewDashboard(tracker)
-	dashboard.RegisterHandlers(mux)
-	homepage := homepage.NewHomepage()
-	homepage.RegisterHandlers(mux)
+	ui := uiapi.New(tracker, ramalama)
+	ui.RegisterHandlers(mux)
 
 	server.ModelNameMangler = func(s string) string {
 		return strings.ReplaceAll(s, "/", "_")
@@ -82,7 +93,7 @@ func main() {
 	defer l.Close()
 
 	server.HandleHttp(mux)
-	err = http.Serve(l, mux)
+	err = http.Serve(l, corsMiddleware(mux))
 
 	log.Fatalf("Failed to serve: %v", err)
 }
