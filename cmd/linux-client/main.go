@@ -43,7 +43,7 @@ func main() {
 
 		for {
 			// send announce request
-			resp, err := http.Post(announceUrl, "", nil)
+			resp, err := http.Get(announceUrl)
 			if err != nil {
 				log.Printf("Failed to announce to tracker: %v\n", err)
 				time.Sleep(retrySleep)
