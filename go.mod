@@ -2,11 +2,13 @@ module github.com/wk-y/rama-swap
 
 go 1.25.1
 
-require github.com/openai/openai-go/v2 v2.7.1
+require (
+	github.com/a-h/templ v0.3.1001
+	github.com/openai/openai-go/v2 v2.7.1
+)
 
 require (
 	github.com/a-h/parse v0.0.0-20250122154542-74294addb73e // indirect
-	github.com/a-h/templ v0.3.1001 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/bytedance/gopkg v0.1.3 // indirect
 	github.com/bytedance/sonic v1.15.0 // indirect
@@ -49,7 +51,6 @@ require (
 )
 
 require (
-	github.com/coreos/go-systemd/v22 v22.7.0
 	github.com/gin-gonic/gin v1.12.0
 	github.com/tidwall/gjson v1.18.0 // indirect
 	github.com/tidwall/match v1.2.0 // indirect
