@@ -8,13 +8,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/coreos/go-systemd/v22/activation"
+	"github.com/gin-gonic/gin"
 
 	"github.com/wk-y/rama-swap/llama"
 	"github.com/wk-y/rama-swap/microservices/dashboard"
 	"github.com/wk-y/rama-swap/microservices/homepage"
 	"github.com/wk-y/rama-swap/microservices/scheduling"
 	"github.com/wk-y/rama-swap/server"
+	openapi "github.com/wk-y/rama-swap/server/openapi/go"
 	schedulersubscriber "github.com/wk-y/rama-swap/server/scheduler_subscriber"
 	"github.com/wk-y/rama-swap/tracker"
 )
@@ -22,8 +23,6 @@ import (
 const EX_USAGE = 64
 
 func main() {
-	mux := http.NewServeMux()
-
 	args, rest, err := parseArgs(os.Args)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", os.Args[0], err)
@@ -37,15 +36,29 @@ func main() {
 
 	setDefaults(&args)
 
+	// set up server
+	handlers := openapi.ApiHandleFunctions{}
+	router := openapi.NewRouter(handlers)
+	mux := http.NewServeMux()
+
+	// wrap mux with router
+	router.NoRoute(func(c *gin.Context) {
+		handler, _ := mux.Handler(c.Request)
+		if handler == nil {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		handler.ServeHTTP(c.Writer, c.Request)
+	})
+
 	ramalama := llama.Llama{
 		Command: args.Ramalama,
 	}
-	tracker := tracker.NewTracker()
-	tracker.AddRoutes(mux)
+	tracker.DefaultTracker.AddRoutes(mux)
 	scheduler := scheduling.NewPartitioningScheduler(scheduling.NewInstanceFactory(&ramalama, 49170), 3)
-	tracker.Subscribe(schedulersubscriber.NewSchedulerSubscriber(scheduler))
+	tracker.DefaultTracker.Subscribe(schedulersubscriber.NewSchedulerSubscriber(scheduler))
 	server := server.NewServer(ramalama, scheduler)
-	dashboard := dashboard.NewDashboard(tracker)
+	dashboard := dashboard.NewDashboard(tracker.DefaultTracker)
 	dashboard.RegisterHandlers(mux)
 	homepage := homepage.NewHomepage()
 	homepage.RegisterHandlers(mux)
@@ -64,7 +77,7 @@ func main() {
 	defer l.Close()
 
 	server.HandleHttp(mux)
-	err = http.Serve(l, mux)
+	err = router.RunListener(l)
 
 	log.Fatalf("Failed to serve: %v", err)
 }

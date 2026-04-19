@@ -10,7 +10,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+
 	"net"
+
+	"github.com/gin-gonic/gin"
 )
 
 // the number of seconds after which an RPC server is removed from the list
@@ -54,54 +57,65 @@ func NewTracker() *Tracker {
 }
 
 func (t *Tracker) AddRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("/announce", t.Announce)
 	mux.HandleFunc("/servers", t.ListServers)
 }
 
-func (t *Tracker) Announce(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Announce request from %s: %v", r.Host, r.URL)
+func (t *Tracker) Announce(c *gin.Context) {
+	log.Printf("Announce request from %s", c.RemoteIP())
 	type response struct {
 		Interval int `json:"interval"`
 	}
 
-	port := r.URL.Query().Get("port")
-	if port == "" {
-		http.Error(w, "missing port", http.StatusBadRequest)
+	port, ok := c.GetQuery("port")
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing port"})
 		return
 	}
 
 	portNum, err := strconv.Atoi(port)
 	if err != nil {
-		http.Error(w, "invalid port", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid port"})
 		return
 	}
 
-	ip := r.URL.Query().Get("ip")
-	if ip == "" {
+	ip, ok := c.GetQuery("ip")
+	if !ok {
 		// fill with the ip from r.RemoteAddr
-		ip = strings.SplitN(r.RemoteAddr, ":", 2)[0]
+		ip = strings.SplitN(c.RemoteIP(), ":", 2)[0]
 	}
 
-	hardwareModel := r.URL.Query().Get("model")
+	hardwareModel := c.Query("model")
 
 	var maxSize int64 = -1
-	if maxSizeStr := r.URL.Query().Get("max_size"); maxSizeStr != "" {
-		maxSize, _ = strconv.ParseInt(maxSizeStr, 10, 64)
+	if maxSizeStr, ok := c.GetQuery("max_size"); ok {
+		maxSize, err = strconv.ParseInt(maxSizeStr, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid max_size"})
+			return
+		}
 	}
 
 	var battery float64 = math.NaN()
-	if batteryStr := r.URL.Query().Get("battery"); batteryStr != "" {
-		battery, _ = strconv.ParseFloat(batteryStr, 64)
+	if batteryStr, ok := c.GetQuery("battery"); ok {
+		battery, err = strconv.ParseFloat(batteryStr, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid battery"})
+			return
+		}
 	}
 
 	var temperature float64 = math.NaN()
-	if temperatureStr := r.URL.Query().Get("temperature"); temperatureStr != "" {
-		temperature, _ = strconv.ParseFloat(temperatureStr, 64)
+	if temperatureStr, ok := c.GetQuery("temperature"); ok {
+		temperature, err = strconv.ParseFloat(temperatureStr, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid temperature"})
+			return
+		}
 	}
 
 	// validate ip
 	if net.ParseIP(ip) == nil {
-		http.Error(w, "invalid ip", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid ip"})
 		return
 	}
 
@@ -156,14 +170,7 @@ func (t *Tracker) Announce(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	// respond
-	w.Header().Add("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(response{
-		Interval: int(interval.Seconds()),
-	})
-
-	if err != nil {
-		log.Printf("Failed to respond to announce: %v", err)
-	}
+	c.JSON(http.StatusOK, gin.H{"interval": interval.Seconds()})
 }
 
 func (t *Tracker) ListServers(w http.ResponseWriter, r *http.Request) {
