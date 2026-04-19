@@ -54,26 +54,6 @@ func main() {
 		return strings.ReplaceAll(s, "/", "_")
 	}
 
-	// serve on all systemd sockets
-	listeners, err := activation.Listeners()
-	if err != nil {
-		log.Fatalf("Failed checking for socket activation: %v", err)
-	}
-
-	for i, listener := range listeners {
-		log.Printf("Listening on socket activation (%d)", i)
-		mux := http.NewServeMux()
-		server.HandleHttp(mux)
-
-		go func() {
-			defer listener.Close()
-
-			err = http.Serve(listener, mux)
-
-			log.Fatalf("Failed to serve: %v", err)
-		}()
-	}
-
 	// serve on the configured host/port
 	log.Printf("Listening on http://%s:%d\n", *args.Host, *args.Port)
 
