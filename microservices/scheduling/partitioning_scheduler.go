@@ -129,7 +129,20 @@ taskHandlerLoop:
 			task = s.modelQueues[highestScoringQueue][0].task
 			s.modelQueues[highestScoringQueue] = s.modelQueues[highestScoringQueue][1:]
 		} else { // wait for a task to arrive
-			task = <-s.newTasksChan
+			for {
+				select {
+				case task = <-s.newTasksChan:
+					break
+				case taskCompletionMessage := <-s.taskCompletedChan:
+					s.handleTaskCompletion(taskCompletionMessage)
+				case node := <-s.nodeConnectChan:
+					s.handleNodeConnect(node)
+				case node := <-s.nodeDisconnectChan:
+					s.handleNodeDisconnect(node)
+				case task := <-s.taskCancelledChan:
+					s.handleTaskCancellation(task)
+				}
+			}
 		}
 
 		s.processEvents()
@@ -180,12 +193,13 @@ taskHandlerLoop:
 		}
 
 		for len(s.unallocatedNodes) == 0 {
-			// only process changes to node status
 			select {
 			case node := <-s.nodeConnectChan:
 				s.handleNodeConnect(node)
 			case node := <-s.nodeDisconnectChan:
 				s.handleNodeDisconnect(node)
+			case task := <-s.taskCancelledChan:
+				s.handleTaskCancellation(task)
 			case completion := <-s.taskCompletedChan:
 				if completion.instanceInfo.instance.Model() == task.Model() && s.checkInstanceNodesStillOk(completion.instanceInfo) {
 					// reuse the instance
