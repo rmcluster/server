@@ -1,6 +1,0 @@
-# suppress openapi-generator creating these files
-/Dockerfile
-/go.mod
-/main.go
-/go/README.md
-/api/openapi.yaml

@@ -11,15 +11,13 @@ package openapi
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/wk-y/rama-swap/tracker"
 )
 
-type DefaultAPI struct {
-}
+type DefaultAPI interface {
 
-// Get /announce
-// Announce a new node
-func (api *DefaultAPI) AnnounceGet(c *gin.Context) {
-	// Your handler implementation
-	tracker.DefaultTracker.Announce(c)
+
+    // AnnounceGet Get /announce
+    // Announce a new node 
+     AnnounceGet(c *gin.Context)
+
 }
