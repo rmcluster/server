@@ -15,7 +15,7 @@ import (
 	"github.com/wk-y/rama-swap/microservices/homepage"
 	"github.com/wk-y/rama-swap/microservices/scheduling"
 	"github.com/wk-y/rama-swap/server"
-	openapi "github.com/wk-y/rama-swap/server/openapi/go"
+	"github.com/wk-y/rama-swap/server/openapi"
 	schedulersubscriber "github.com/wk-y/rama-swap/server/scheduler_subscriber"
 	"github.com/wk-y/rama-swap/tracker"
 )
@@ -37,8 +37,7 @@ func main() {
 	setDefaults(&args)
 
 	// set up server
-	handlers := openapi.ApiHandleFunctions{}
-	router := openapi.NewRouter(handlers)
+	router := openapi.NewRouter()
 	mux := http.NewServeMux()
 
 	// wrap mux with router
