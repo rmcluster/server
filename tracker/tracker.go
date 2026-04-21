@@ -99,7 +99,7 @@ func (t *Tracker) Announce(w http.ResponseWriter, r *http.Request) {
 		temperature, _ = strconv.ParseFloat(temperatureStr, 64)
 	}
 
-	// done: validate ip
+	// validate ip
 	if net.ParseIP(ip) == nil {
 		http.Error(w, "invalid ip", http.StatusBadRequest)
 		return
