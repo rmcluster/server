@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -74,10 +73,10 @@ func (t *Tracker) Announce(c *gin.Context) {
 		return
 	}
 
+	// use the request's source address if ip is not specified
 	ip, ok := c.GetQuery("ip")
 	if !ok {
-		// fill with the ip from r.RemoteAddr
-		ip = strings.SplitN(c.RemoteIP(), ":", 2)[0]
+		ip = c.RemoteIP()
 	}
 
 	hardwareModel := c.Query("model")
