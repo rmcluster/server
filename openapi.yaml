@@ -30,3 +30,40 @@ paths:
                   interval:
                     type: float
                     description: "The number of seconds the client should wait between announces."
+  /servers:
+    get:
+      operationId: TrackerServersGet
+      summary: List all nodes currently known to the tracker
+      responses:
+        200:
+          description: "Successful listing of nodes"
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - servers
+                properties:
+                  servers:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - ip
+                        - port
+                        - last_seen
+                      properties:
+                        ip:
+                          type: string
+                        port:
+                          type: integer
+                        last_seen:
+                          type: string
+                        hardware_model:
+                          type: string
+                        max_size:
+                          type: integer
+                        battery:
+                          type: number
+                        temperature:
+                          type: number

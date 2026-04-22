@@ -20,4 +20,8 @@ type DefaultAPI interface {
     // Announce a new node 
      TrackerAnnounceGet(c *gin.Context)
 
+    // TrackerServersGet Get /servers
+    // List all nodes currently known to the tracker 
+     TrackerServersGet(c *gin.Context)
+
 }

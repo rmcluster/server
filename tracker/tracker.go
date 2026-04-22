@@ -56,10 +56,6 @@ func NewTracker() *Tracker {
 	}
 }
 
-func (t *Tracker) AddRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("/servers", t.ListServers)
-}
-
 func (t *Tracker) Announce(c *gin.Context) {
 	log.Printf("Announce request from %s", c.RemoteIP())
 	type response struct {
