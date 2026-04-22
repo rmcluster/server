@@ -9,7 +9,7 @@
 
 package openapi
 
-type AnnounceGet200Response struct {
+type TrackerAnnounceGet200Response struct {
 
 	// The number of seconds the client should wait between announces.
 	Interval float32 `json:"interval,omitempty"`

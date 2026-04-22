@@ -16,8 +16,8 @@ import (
 type DefaultAPI interface {
 
 
-    // AnnounceGet Get /announce
+    // TrackerAnnounceGet Get /announce
     // Announce a new node 
-     AnnounceGet(c *gin.Context)
+     TrackerAnnounceGet(c *gin.Context)
 
 }
