@@ -56,7 +56,6 @@ func NewTracker() *Tracker {
 }
 
 func (t *Tracker) Announce(c *gin.Context) {
-	log.Printf("Announce request from %s", c.RemoteIP())
 	type response struct {
 		Interval int `json:"interval"`
 	}
