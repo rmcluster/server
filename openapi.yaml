@@ -26,6 +26,8 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - interval
                 properties:
                   interval:
                     type: float
