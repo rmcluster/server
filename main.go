@@ -41,14 +41,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	// wrap mux with router
-	router.NoRoute(func(c *gin.Context) {
-		handler, _ := mux.Handler(c.Request)
-		if handler == nil {
-			c.Status(http.StatusNotFound)
-			return
-		}
-		handler.ServeHTTP(c.Writer, c.Request)
-	})
+	router.NoRoute(gin.WrapH(mux))
 
 	ramalama := llama.Llama{
 		Command: args.Ramalama,
