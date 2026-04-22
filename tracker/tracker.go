@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"net"
 )
 
 // the number of seconds after which an RPC server is removed from the list
@@ -98,7 +99,11 @@ func (t *Tracker) Announce(w http.ResponseWriter, r *http.Request) {
 		temperature, _ = strconv.ParseFloat(temperatureStr, 64)
 	}
 
-	// todo: validate ip
+	// validate ip
+	if net.ParseIP(ip) == nil {
+		http.Error(w, "invalid ip", http.StatusBadRequest)
+		return
+	}
 
 	clientId := ip // + ":" + port
 

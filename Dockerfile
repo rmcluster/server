@@ -1,4 +1,4 @@
-FROM docker.io/golang:1.26.1@sha256:cdebbd553e5ed852386e9772e429031467fa44ca3a06735e6beb005d615e623d AS builder
+FROM docker.io/golang:1.26.2@sha256:5f3787b7f902c07c7ec4f3aa91a301a3eda8133aa32661a3b3a3a86ab3a68a36 AS builder
 WORKDIR /build-dir
 
 COPY go.mod go.sum ./
@@ -7,7 +7,7 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 go build -o rmd-server .
 
-FROM ghcr.io/project-panzerschreck/llama.cpp-rpc:server@sha256:296159e5b568ababefc8b317e9e6edb2f9f20986109fb9f0fa01e6b4e6bd70a9
+FROM ghcr.io/rmcluster/llama.cpp-rpc:server@sha256:0fcff462704e7e1fa5d692109934ca79927d7811f64fe6b070dfd0fd82e758a9
 COPY --from=builder /build-dir/rmd-server /usr/local/bin/rmd-server
 
 # llama.cpp's docker image puts the executables in /app
