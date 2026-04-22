@@ -6,6 +6,7 @@ info:
 paths:
   /announce:
     get:
+      operationId: TrackerAnnounceGet
       summary: Announce a new node
       parameters:
         - name: port

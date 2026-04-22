@@ -14,8 +14,8 @@ func NewRouter() *gin.Engine {
 
 type OpenAPIRoutes struct{}
 
-// AnnounceGet implements [openapi.DefaultAPI].
-func (o OpenAPIRoutes) AnnounceGet(c *gin.Context) {
+// TrackerAnnounceGet implements [openapi.DefaultAPI].
+func (o OpenAPIRoutes) TrackerAnnounceGet(c *gin.Context) {
 	tracker.DefaultTracker.Announce(c)
 }
 

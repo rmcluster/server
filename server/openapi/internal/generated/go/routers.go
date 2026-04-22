@@ -69,10 +69,10 @@ type ApiHandleFunctions struct {
 func getRoutes(handleFunctions ApiHandleFunctions) []Route {
 	return []Route{ 
 		{
-			"AnnounceGet",
+			"TrackerAnnounceGet",
 			http.MethodGet,
 			"/announce",
-			handleFunctions.DefaultAPI.AnnounceGet,
+			handleFunctions.DefaultAPI.TrackerAnnounceGet,
 		},
 	}
 }
