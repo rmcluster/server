@@ -74,5 +74,11 @@ func getRoutes(handleFunctions ApiHandleFunctions) []Route {
 			"/announce",
 			handleFunctions.DefaultAPI.TrackerAnnounceGet,
 		},
+		{
+			"TrackerServersGet",
+			http.MethodGet,
+			"/servers",
+			handleFunctions.DefaultAPI.TrackerServersGet,
+		},
 	}
 }

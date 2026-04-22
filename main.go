@@ -53,7 +53,6 @@ func main() {
 	ramalama := llama.Llama{
 		Command: args.Ramalama,
 	}
-	tracker.DefaultTracker.AddRoutes(mux)
 	scheduler := scheduling.NewPartitioningScheduler(scheduling.NewInstanceFactory(&ramalama, 49170), 3)
 	tracker.DefaultTracker.Subscribe(schedulersubscriber.NewSchedulerSubscriber(scheduler))
 	server := server.NewServer(ramalama, scheduler)
