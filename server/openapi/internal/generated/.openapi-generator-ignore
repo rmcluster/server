@@ -2,4 +2,5 @@
 /main.go
 /Dockerfile
 /go.mod
+/go/README.md
 /api/**
