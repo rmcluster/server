@@ -27,6 +27,7 @@ func (o OpenAPIRoutes) TrackerServersGet(c *gin.Context) {
 		response.Servers = append(response.Servers, internal.TrackerServersGet200ResponseServersInner{
 			Ip:            node.Ip,
 			Port:          int32(node.Port),
+			StoragePort:   int32(node.StoragePort),
 			LastSeen:      node.LastSeen.Format(time.RFC3339),
 			HardwareModel: node.HardwareModel,
 			MaxSize:       int32(node.MaxSize),

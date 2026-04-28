@@ -10,8 +10,15 @@ paths:
       summary: Announce a new node
       parameters:
         - name: port
+          description: "The port for the llama-rpc server"
           in: query
           required: true
+          schema:
+            type: integer
+        - name: storage_port
+          description: "The port for the storage server"
+          in: query
+          required: false
           schema:
             type: integer
         - name: ip
@@ -58,6 +65,8 @@ paths:
                         ip:
                           type: string
                         port:
+                          type: integer
+                        storage_port:
                           type: integer
                         last_seen:
                           type: string

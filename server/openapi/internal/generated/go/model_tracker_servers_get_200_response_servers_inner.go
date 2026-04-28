@@ -15,6 +15,8 @@ type TrackerServersGet200ResponseServersInner struct {
 
 	Port int32 `json:"port"`
 
+	StoragePort int32 `json:"storage_port,omitempty"`
+
 	LastSeen string `json:"last_seen"`
 
 	HardwareModel string `json:"hardware_model,omitempty"`
