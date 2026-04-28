@@ -41,6 +41,7 @@ type clientInfo struct {
 type RpcServerInfo struct {
 	Ip            string    `json:"ip"`
 	Port          int       `json:"port"`
+	StoragePort   int       `json:"storage_port"`
 	LastSeen      time.Time `json:"last_seen"`
 	HardwareModel string    `json:"hardware_model"` // the hardware's model name
 	MaxSize       int64     `json:"max_size"`
@@ -70,6 +71,15 @@ func (t *Tracker) Announce(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid port"})
 		return
+	}
+
+	var storagePort int
+	if storagePortStr, ok := c.GetQuery("storage_port"); ok {
+		storagePort, err = strconv.Atoi(storagePortStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid storage_port"})
+			return
+		}
 	}
 
 	// use the request's source address if ip is not specified
@@ -135,6 +145,7 @@ func (t *Tracker) Announce(c *gin.Context) {
 			LastSeen:      announceTime,
 			Ip:            ip,
 			Port:          portNum,
+			StoragePort:   storagePort,
 			HardwareModel: hardwareModel,
 			MaxSize:       maxSize,
 			Battery:       battery,
