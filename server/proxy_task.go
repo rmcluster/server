@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -27,11 +28,17 @@ func (p *proxyTask) Model() string {
 }
 
 // PerformInference implements [scheduling.Task].
-func (p *proxyTask) PerformInference(instance scheduling.Instance) error {
+func (p *proxyTask) PerformInference(instance scheduling.Instance) (err error) {
+	// ServeHTTP can panic if the connection to the llama.cpp instance is broken, so we need to handle it and return an error
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("error proxying request for model %v: %v", p.model, r)
+		}
+	}()
 	log.Printf("Proxying request for model %v", p.model)
 	// forward the request to the openai client
 	instance.ReverseProxy().ServeHTTP(p.w, p.r)
-	return nil
+	return
 }
 
 var _ scheduling.Task = (*proxyTask)(nil)
