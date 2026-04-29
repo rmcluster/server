@@ -1,6 +1,7 @@
 package openapi
 
 import (
+	"math"
 	"net/http"
 	"time"
 
@@ -31,8 +32,8 @@ func (o OpenAPIRoutes) TrackerServersGet(c *gin.Context) {
 			LastSeen:      node.LastSeen.Format(time.RFC3339),
 			HardwareModel: node.HardwareModel,
 			MaxSize:       int32(node.MaxSize),
-			Battery:       float32(node.Battery),
-			Temperature:   float32(node.Temperature),
+			Battery:       float32(nanToZero(node.Battery)),
+			Temperature:   float32(nanToZero(node.Temperature)),
 		})
 	}
 	c.JSON(http.StatusOK, response)
@@ -44,3 +45,10 @@ func (o OpenAPIRoutes) TrackerAnnounceGet(c *gin.Context) {
 }
 
 var _ internal.DefaultAPI = OpenAPIRoutes{}
+
+func nanToZero(val float64) float64 {
+	if math.IsNaN(val) {
+		return 0.0
+	}
+	return val
+}
