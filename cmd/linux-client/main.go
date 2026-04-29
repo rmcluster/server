@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"time"
@@ -15,10 +16,15 @@ import (
 const retrySleep = time.Second
 
 func main() {
+	id := flag.String("id", "", "the id of the node")
 	tracker := flag.String("tracker", "127.0.0.1:4917", "ip:port of the tracker")
 	rpcPort := flag.Int("port", 1984, "port to run the RPC server on")
 	rpcCommand := flag.String("cmd", "rpc-server", "command to run the RPC server")
 	flag.Parse()
+
+	if *id == "" {
+		log.Fatal("missing id")
+	}
 
 	args := []string{
 		"--port", fmt.Sprint(*rpcPort),
@@ -39,11 +45,22 @@ func main() {
 
 	// start announcement loop
 	go func() {
-		announceUrl := fmt.Sprintf("http://%s/announce?port=%d", *tracker, *rpcPort)
+
+		query := make(url.Values)
+		query.Add("id", *id)
+		query.Add("port", fmt.Sprint(*rpcPort))
+
+		announceUrl := url.URL{
+			Scheme:   "http",
+			Host:     *tracker,
+			Path:     "/announce",
+			RawQuery: query.Encode(),
+		}
 
 		for {
 			// send announce request
-			resp, err := http.Get(announceUrl)
+			log.Printf("Announcing: %s", announceUrl.String())
+			resp, err := http.Get(announceUrl.String())
 			if err != nil {
 				log.Printf("Failed to announce to tracker: %v\n", err)
 				time.Sleep(retrySleep)
