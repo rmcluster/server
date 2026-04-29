@@ -129,10 +129,11 @@ taskHandlerLoop:
 			task = s.modelQueues[highestScoringQueue][0].task
 			s.modelQueues[highestScoringQueue] = s.modelQueues[highestScoringQueue][1:]
 		} else { // wait for a task to arrive
+		awaitTaskLoop:
 			for {
 				select {
 				case task = <-s.newTasksChan:
-					break
+					break awaitTaskLoop
 				case taskCompletionMessage := <-s.taskCompletedChan:
 					s.handleTaskCompletion(taskCompletionMessage)
 				case node := <-s.nodeConnectChan:
