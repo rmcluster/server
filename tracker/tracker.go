@@ -39,6 +39,7 @@ type clientInfo struct {
 }
 
 type RpcServerInfo struct {
+	Id            string    `json:"id"`
 	Ip            string    `json:"ip"`
 	Port          int       `json:"port"`
 	StoragePort   int       `json:"storage_port"`
@@ -59,6 +60,12 @@ func NewTracker() *Tracker {
 func (t *Tracker) Announce(c *gin.Context) {
 	type response struct {
 		Interval int `json:"interval"`
+	}
+
+	id, ok := c.GetQuery("id")
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing id"})
+		return
 	}
 
 	port, ok := c.GetQuery("port")
@@ -123,7 +130,7 @@ func (t *Tracker) Announce(c *gin.Context) {
 		return
 	}
 
-	clientId := ip // + ":" + port
+	clientId := id
 
 	func() {
 		t.Lock()
@@ -142,6 +149,7 @@ func (t *Tracker) Announce(c *gin.Context) {
 		announceTime := time.Now()
 
 		serverInfo := RpcServerInfo{
+			Id:            id,
 			LastSeen:      announceTime,
 			Ip:            ip,
 			Port:          portNum,
