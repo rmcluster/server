@@ -55,7 +55,7 @@ func main() {
 	}
 	tracker := tracker.NewTracker()
 	tracker.AddRoutes(mux)
-	scheduler := scheduling.NewPartitioningScheduler(scheduling.NewInstanceFactory(&ramalama, 49170), 3)
+	scheduler := scheduling.NewFcfsScheduler(scheduling.NewInstanceFactory(&ramalama, 49170))
 	tracker.Subscribe(schedulersubscriber.NewSchedulerSubscriber(scheduler))
 	server := server.NewServer(ramalama, scheduler)
 	ui := uiapi.New(tracker, ramalama)

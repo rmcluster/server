@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"log"
 	"math"
+	"net"
 	"net/http"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-	"net"
 )
 
 // the number of seconds after which an RPC server is removed from the list
@@ -78,8 +78,12 @@ func (t *Tracker) Announce(w http.ResponseWriter, r *http.Request) {
 
 	ip := r.URL.Query().Get("ip")
 	if ip == "" {
-		// fill with the ip from r.RemoteAddr
-		ip = strings.SplitN(r.RemoteAddr, ":", 2)[0]
+		// Fill with the remote IP while handling IPv4 and IPv6 forms.
+		if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+			ip = strings.Trim(host, "[]")
+		} else {
+			ip = strings.Trim(r.RemoteAddr, "[]")
+		}
 	}
 
 	hardwareModel := r.URL.Query().Get("model")
@@ -143,8 +147,9 @@ func (t *Tracker) Announce(w http.ResponseWriter, r *http.Request) {
 				// preventing the timer from being stopped. To prevent that, we verify that the last seen time
 				// has not been changed.
 				if t.RpcServers[clientId].LastSeen.Equal(announceTime) {
+					serverInfo := t.RpcServers[clientId].RpcServerInfo
 					delete(t.RpcServers, clientId)
-					t.notifyNodeRemoved(t.RpcServers[clientId].RpcServerInfo)
+					t.notifyNodeRemoved(serverInfo)
 					log.Printf("Removed %s from tracker", clientId)
 				}
 			}),
