@@ -9,6 +9,12 @@ paths:
       operationId: TrackerAnnounceGet
       summary: Announce a new node
       parameters:
+        - name: id
+          description: "The unique identifier of the node (should be generated and stored by the node itself)"
+          in: query
+          required: true
+          schema:
+            type: string
         - name: port
           description: "The port for the llama-rpc server"
           in: query
