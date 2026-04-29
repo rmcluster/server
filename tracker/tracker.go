@@ -24,6 +24,7 @@ const interval = time.Second * 10
 type TrackerSubscriber interface {
 	OnNodeAdded(node RpcServerInfo)
 	OnNodeRemoved(node RpcServerInfo)
+	OnNodeUpdated(node RpcServerInfo)
 }
 
 type Tracker struct {
@@ -179,6 +180,8 @@ func (t *Tracker) Announce(c *gin.Context) {
 
 		if notifyNew {
 			t.notifyNodeAdded(serverInfo)
+		} else {
+			t.notifyNodeUpdated(serverInfo)
 		}
 	}()
 
@@ -247,5 +250,11 @@ func (t *Tracker) notifyNodeAdded(node RpcServerInfo) {
 func (t *Tracker) notifyNodeRemoved(node RpcServerInfo) {
 	for subscriber := range t.subscribers {
 		subscriber.OnNodeRemoved(node)
+	}
+}
+
+func (t *Tracker) notifyNodeUpdated(node RpcServerInfo) {
+	for subscriber := range t.subscribers {
+		subscriber.OnNodeUpdated(node)
 	}
 }
