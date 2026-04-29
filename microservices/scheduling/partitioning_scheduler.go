@@ -46,6 +46,7 @@ func NewPartitioningScheduler(instanceFactory InstanceFactory, parallelismTarget
 		taskCompletedChan: make(chan TaskCompletionMessage),
 		parallelismTarget: parallelismTarget,
 		idleBias:          10 * time.Second,
+		instanceDeadChan:  make(chan instanceInfo),
 	}
 	go scheduler.run()
 	return scheduler
@@ -77,6 +78,7 @@ type PartitioningScheduler struct {
 	nodeEventChan     chan NodeEvent
 	taskCancelledChan chan Task
 	taskCompletedChan chan TaskCompletionMessage
+	instanceDeadChan  chan instanceInfo
 }
 
 type NodeEventType int
@@ -247,6 +249,11 @@ taskHandlerLoop:
 			usedNodes: nodes,
 		}
 
+		go func() {
+			instance.AwaitTermination()
+			s.instanceDeadChan <- instanceInfo
+		}()
+
 		for _, node := range nodes {
 			s.allocatedNodes[node.Id()] = NodeAllocationInfo{
 				instance: instance,
@@ -280,6 +287,8 @@ func (s *PartitioningScheduler) processEvents() {
 			s.handleNodeEvent(nodeEvent)
 		case task := <-s.taskCancelledChan:
 			s.handleTaskCancellation(task)
+		case instanceInfo := <-s.instanceDeadChan:
+			s.killInstance(instanceInfo)
 		default:
 			return
 		}
